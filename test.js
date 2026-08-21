@@ -95,8 +95,8 @@ class FindYourHatGame {
   }
 }
 
+/*****************ส่วนการสร้างสนามแบบสุ่ม*************** ****************** */
 function generateRandomField(rows, cols, holePercentage = 0.2) {
-  // ตารางเปล่า default หลุม 20% ของพื้นที่ทั้งหมด
   const field = [];
   for (let i = 0; i < rows; i++) {
     field[i] = [];
@@ -108,30 +108,51 @@ function generateRandomField(rows, cols, holePercentage = 0.2) {
   const startX = Math.floor(Math.random() * cols);
   const startY = Math.floor(Math.random() * rows);
 
+  // วางหมวกก่อน
+  let hatX, hatY;
+  let hatPlaced = false;
+  while (!hatPlaced) {
+    const x = Math.floor(Math.random() * cols);
+    const y = Math.floor(Math.random() * rows);
+    if ((x !== startX || y !== startY) && field[y][x] === "░") {
+      field[y][x] = "^";
+      hatX = x;
+      hatY = y;
+      hatPlaced = true;
+    }
+  }
+
+  // สร้างเส้นทางเดินจาก start ไปหาหมวก (เดินตามแกน x ก่อน แล้วตามแกน y) ** ช่วยไม่ให้ถูกบล็อก
+  const safePath = [];
+  let x = startX;
+  let y = startY;
+  while (x !== hatX) {
+    x += x < hatX ? 1 : -1;
+    safePath.push([x, y]);
+  }
+  while (y !== hatY) {
+    y += y < hatY ? 1 : -1;
+    safePath.push([x, y]);
+  }
+
+  // วางหลุม โดยห้ามวางทับเส้นทางที่กันไว้
   const numHoles = Math.floor(rows * cols * holePercentage);
   let holesPlaced = 0;
   while (holesPlaced < numHoles) {
     const x = Math.floor(Math.random() * cols);
     const y = Math.floor(Math.random() * rows);
 
-    if ((x !== startX || y !== startY) && field[y][x] === "░") {
+    const onSafePath = safePath.some(([px, py]) => px === x && py === y);
+
+    if ((x !== startX || y !== startY) && field[y][x] === "░" && !onSafePath) {
       field[y][x] = "O";
       holesPlaced++;
-    }
-  }
-  let hatPlaced = false;
-  while (!hatPlaced) {
-    const x = Math.floor(Math.random() * cols);
-    const y = Math.floor(Math.random() * rows);
-
-    if ((x !== startX || y !== startY) && field[y][x] === "░") {
-      field[y][x] = "^";
-      hatPlaced = true;
     }
   }
 
   return [field, startX, startY];
 }
+
 
 /*****************ประกาศ RL รออ่านค่าคีย์บอร์ด**************************/
 const readline = require("readline");
