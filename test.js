@@ -1,9 +1,9 @@
 /*************************ส่วนการประกาศ CLASS  GAME************************** */
 class FindYourHatGame {
-  constructor(field) {
+  constructor(field, startX = 0, startY = 0) {
     this.field = field;
-    this.playerX = 0;
-    this.playerY = 0;
+    this.playerX = startX;
+    this.playerY = startY;
     this.isGameOver = false;
 
     this.field[this.playerY][this.playerX] = "*";
@@ -96,7 +96,7 @@ class FindYourHatGame {
 }
 
 function generateRandomField(rows, cols, holePercentage = 0.2) {
-
+  // ตารางเปล่า default หลุม 20% ของพื้นที่ทั้งหมด
   const field = [];
   for (let i = 0; i < rows; i++) {
     field[i] = [];
@@ -105,26 +105,32 @@ function generateRandomField(rows, cols, holePercentage = 0.2) {
     }
   }
 
+  const startX = Math.floor(Math.random() * cols);
+  const startY = Math.floor(Math.random() * rows);
 
   const numHoles = Math.floor(rows * cols * holePercentage);
-  for (let i = 0; i < numHoles; i++) {
+  let holesPlaced = 0;
+  while (holesPlaced < numHoles) {
     const x = Math.floor(Math.random() * cols);
     const y = Math.floor(Math.random() * rows);
-    field[y][x] = "O";
+
+    if ((x !== startX || y !== startY) && field[y][x] === "░") {
+      field[y][x] = "O";
+      holesPlaced++;
+    }
   }
-
-
   let hatPlaced = false;
   while (!hatPlaced) {
     const x = Math.floor(Math.random() * cols);
     const y = Math.floor(Math.random() * rows);
-    if (field[y][x] === "░") {
+
+    if ((x !== startX || y !== startY) && field[y][x] === "░") {
       field[y][x] = "^";
       hatPlaced = true;
     }
   }
 
-  return field;
+  return [field, startX, startY];
 }
 
 /*****************ประกาศ RL รออ่านค่าคีย์บอร์ด**************************/
@@ -166,17 +172,18 @@ function handleCommand(command) {
   } else if (command === "d") {
     game.moveDown();
   } else {
-    console.log("\n Please Enter Left[l], Right[r], Up[u], Down[d], or Quit[q]\n");
+    console.log(
+      "\n Please Enter Left[l], Right[r], Up[u], Down[d], or Quit[q]\n",
+    );
   }
 }
 
-
-
-
 /*************************ส่วนการทำงาน*************************************************** */
+
+const [randomField, startX, startY] = generateRandomField(8,8);
+const game = new FindYourHatGame(randomField, startX, startY);
+// กำหนดขนาดความกว้าง และความสูงของสนาม ใส่กลับไปใน CLASS เพื่อเริ่มเกม
 console.clear();
 console.log("Welcome to Find Your Hat Game!");
-const game = new FindYourHatGame(generateRandomField(5, 5)); 
-// กำหนดขนาดความกว้าง และความสูงของสนาม ใส่กลับไปใน CLASS เพื่อเริ่มเกม
 game.print();
 askForCommand();
